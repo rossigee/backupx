@@ -1,0 +1,2 @@
+backups:
+	go build

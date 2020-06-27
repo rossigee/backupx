@@ -1,0 +1,25 @@
+---
+id: test1
+name: "Test backup #1"
+sources:
+- id: testdata1
+  type: folder
+  name: "Test data volume 1"
+  path: /vol1/testdata1
+  passphrase: onedaythismightjustwork
+destinations:
+- id: s3-backups
+  type: s3
+  endpoint_url: "http://minio-b2:9000"
+  bucket: backups-singapore
+  region: ap-southeast-1
+  prefix: production
+  retention_copies: 10
+notifications:
+- id: matrix
+  type: matrix
+  url: https://matrix.yourdomain.com
+  access_token: your_matrix_access_token
+  room_id: "!roomforbackupnotifications:matrix.yourdomain.com"
+  notify_on_success: 0
+  notify_on_failure: 0

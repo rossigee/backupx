@@ -1,62 +1,101 @@
 package main
 
 import (
-	"os"
-	"log"
 	"flag"
 	"fmt"
+	"log"
+	"os"
+	"strings"
 	"time"
+
+	"github.com/rossigee/backupx/config"
+	"github.com/rossigee/backupx/internal/jsonconfig"
+	"github.com/rossigee/backupx/internal/yamlconfig"
 )
 
 var (
+	conf    config.IBackupConfig
 	verbose bool
+	debug   bool
+	timings Timings
 )
 
-type notification struct {
+type Timings struct {
 	startTime time.Time
-	endTime time.Time
+	endTime   time.Time
+}
+
+func usage() {
+	fmt.Fprintf(os.Stderr, "Usage: %s [-v] [-d] <filename>\n", os.Args[0])
+	fmt.Fprintf(os.Stderr, "<filename> is YAML or JSON config file (see docs)\n")
+	flag.PrintDefaults()
+}
+
+func parse_args() (string, bool) {
+	flag.Usage = usage
+	verbose_opt := flag.Bool("v", false, "Verbose output")
+	debug_opt := flag.Bool("d", false, "Debug output")
+	flag.Parse()
+	verbose = *verbose_opt
+	debug = *debug_opt
+
+	args := flag.Args()
+	if len(args) != 1 {
+		return "", true
+	}
+
+	return args[0], false
 }
 
 func main() {
-	var (
-		 conf conf
-		 notification notification
-	)
-
-	verbose := flag.Bool("v", false, "Verbose output")
-	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Usage: %s <filename>\n", os.Args[0])
-		fmt.Fprintf(os.Stderr, "<filename> is YAML config file (see docs)\n")
-		flag.PrintDefaults()
-	}
-	flag.Parse()
-	args := flag.Args()
-	if len(args) != 1 {
+	// Determine where to find our configuration
+	filename, usage := parse_args()
+	if usage {
 		flag.Usage()
 		os.Exit(1)
 	}
 
-	var filename = args[0]
-	if *verbose {
-		log.Printf("Reading config from file: %s", filename)
+	// Parse JSON or YAML file specified
+	var err error
+	if strings.HasSuffix(filename, ".json") {
+		conf, err = jsonconfig.ParseJSONConfigFile(filename)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error parsing JSON config file: %s\n", err)
+			os.Exit(2)
+		}
+	} else if strings.HasSuffix(filename, ".yaml") {
+		conf, err = yamlconfig.ParseYAMLConfigFile(filename)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error parsing YAML config file: %s\n", err)
+			os.Exit(2)
+		}
+	} else {
+		log.Fatal("Unknown config file type")
 	}
-	conf.parseYamlConf(filename)
 
-	for _, dest := range conf.Spec.Destinations {
-		log.Printf("Initialising destination '%s'", dest.Description)
+	// Initialise destinations
+	for _, dest := range conf.GetDestinationConfigs() {
+		log.Printf("Initialising destination '%s'", dest.GetId())
 		// TODO
 	}
 
-	log.Printf("Initialising source '%s'", conf.Spec.Source.Description)
-	notification.startTime = time.Now()
-  // TODO stuff
-	notification.endTime = time.Now()
-	elapsed := notification.endTime.Sub(notification.startTime)
-	log.Printf("Process run in %d milliseconds.", elapsed)
+	// Loop for each source
+	sources := conf.GetSourceConfigs()
+	for i := 0; i < len(sources); i++ {
+		log.Printf("Initialising source '%s'", sources[i].GetId())
+		timings.startTime = time.Now()
 
-	for _, notifier := range conf.Spec.Notifiers {
-		log.Printf("Sending notification via '%s'", notifier.Description)
-		// TODO
+		// TODO stuff
+		log.Printf("DOING STUFF...")
+
+		timings.endTime = time.Now()
+		elapsed := timings.endTime.Sub(timings.startTime)
+		log.Printf("Process run in %d milliseconds.", elapsed)
+
+		for _, notification := range conf.GetNotificationConfigs() {
+			log.Printf("Sending timings via '%s'", notification.GetName())
+			// TODO
+		}
 	}
 
 	// Happy ending
