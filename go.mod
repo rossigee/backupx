@@ -1,8 +1,5 @@
 module github.com/rossigee/backupx
 
-go 1.13
+go 1.24
 
-require (
-	github.com/mitchellh/cli v1.1.1
-	gopkg.in/yaml.v2 v2.3.0
-)
+require gopkg.in/yaml.v2 v2.4.0
