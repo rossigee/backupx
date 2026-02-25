@@ -3,7 +3,7 @@ package jsonconfig
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 
 	"github.com/rossigee/backupx/config"
 )
@@ -11,12 +11,12 @@ import (
 func ParseJSONConfigFile(filename string) (config.IBackupConfig, error) {
 	var conf JSONBackupConf
 
-	rawJSON, err := ioutil.ReadFile(filename)
+	rawJSON, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, fmt.Errorf("Error reading JSON file: %v", err)
 	}
 
-	var configMap map[string]interface{}
+	var configMap map[string]any
 	err = json.Unmarshal(rawJSON, &configMap)
 	if err != nil {
 		return nil, fmt.Errorf("Error parsing JSON file: %v", err)
@@ -25,15 +25,25 @@ func ParseJSONConfigFile(filename string) (config.IBackupConfig, error) {
 	for k, v := range configMap {
 		switch k {
 		case "id":
-			conf.Id = v.(string)
+			if s, ok := v.(string); ok {
+				conf.Id = s
+			}
 		case "name":
-			conf.Name = v.(string)
+			if s, ok := v.(string); ok {
+				conf.Name = s
+			}
 		case "sources":
-			conf.Sources = parseSources(v.([]interface{}))
+			if slice, ok := v.([]any); ok {
+				conf.Sources = parseSources(slice)
+			}
 		case "destinations":
-			conf.Destinations = parseDestinations(v.([]interface{}))
+			if slice, ok := v.([]any); ok {
+				conf.Destinations = parseDestinations(slice)
+			}
 		case "notifications":
-			conf.Notifications = parseNotifications(v.([]interface{}))
+			if slice, ok := v.([]any); ok {
+				conf.Notifications = parseNotifications(slice)
+			}
 		}
 	}
 

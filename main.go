@@ -31,7 +31,7 @@ func usage() {
 	flag.PrintDefaults()
 }
 
-func parse_args() (string, bool) {
+func parseArgs() (string, bool) {
 	flag.Usage = usage
 	verbose_opt := flag.Bool("v", false, "Verbose output")
 	debug_opt := flag.Bool("d", false, "Debug output")
@@ -49,7 +49,7 @@ func parse_args() (string, bool) {
 
 func main() {
 	// Determine where to find our configuration
-	filename, usage := parse_args()
+	filename, usage := parseArgs()
 	if usage {
 		flag.Usage()
 		os.Exit(1)
@@ -81,8 +81,8 @@ func main() {
 
 	// Loop for each source
 	sources := conf.GetSourceConfigs()
-	for i := 0; i < len(sources); i++ {
-		log.Printf("Initialising source '%s'", sources[i].GetId())
+	for _, src := range sources {
+		log.Printf("Initialising source '%s'", src.GetId())
 		timings.startTime = time.Now()
 
 		// TODO stuff
@@ -90,7 +90,7 @@ func main() {
 
 		timings.endTime = time.Now()
 		elapsed := timings.endTime.Sub(timings.startTime)
-		log.Printf("Process run in %d milliseconds.", elapsed)
+		log.Printf("Process run in %d milliseconds.", elapsed.Milliseconds())
 
 		for _, notification := range conf.GetNotificationConfigs() {
 			log.Printf("Sending timings via '%s'", notification.GetName())

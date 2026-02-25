@@ -2,7 +2,7 @@ package yamlconfig
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 
 	"github.com/rossigee/backupx/config"
 	"gopkg.in/yaml.v2"
@@ -11,12 +11,12 @@ import (
 func ParseYAMLConfigFile(filename string) (config.IBackupConfig, error) {
 	var conf YAMLBackupConf
 
-	rawYAML, err := ioutil.ReadFile(filename)
+	rawYAML, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, fmt.Errorf("Error reading YAML file: %v", err)
 	}
 
-	var configMap map[string]interface{}
+	var configMap map[string]any
 	err = yaml.Unmarshal(rawYAML, &configMap)
 	if err != nil {
 		return nil, fmt.Errorf("Error parsing YAML file: %v", err)
@@ -25,15 +25,25 @@ func ParseYAMLConfigFile(filename string) (config.IBackupConfig, error) {
 	for k, v := range configMap {
 		switch k {
 		case "id":
-			conf.Id = v.(string)
+			if s, ok := v.(string); ok {
+				conf.Id = s
+			}
 		case "name":
-			conf.Name = v.(string)
+			if s, ok := v.(string); ok {
+				conf.Name = s
+			}
 		case "sources":
-			conf.Sources = parseSources(v.([]interface{}))
+			if slice, ok := v.([]any); ok {
+				conf.Sources = parseSources(slice)
+			}
 		case "destinations":
-			conf.Destinations = parseDestinations(v.([]interface{}))
+			if slice, ok := v.([]any); ok {
+				conf.Destinations = parseDestinations(slice)
+			}
 		case "notifications":
-			conf.Notifications = parseNotifications(v.([]interface{}))
+			if slice, ok := v.([]any); ok {
+				conf.Notifications = parseNotifications(slice)
+			}
 		}
 	}
 

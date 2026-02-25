@@ -1,8 +1,6 @@
 package jsonconfig
 
-import (
-	"strconv"
-)
+import "strconv"
 
 type JSONBackupDestinationConf struct {
 	Id              string `json:"id"`
@@ -27,27 +25,35 @@ func (c JSONBackupDestinationConf) GetOtherAttributes() map[string]string {
 	return c.OtherAttributes
 }
 
-func parseDestinations(j []interface{}) []JSONBackupDestinationConf {
+func parseDestinations(j []any) []JSONBackupDestinationConf {
 	destinations := []JSONBackupDestinationConf{}
 	for _, a := range j {
+		m, ok := a.(map[string]any)
+		if !ok {
+			continue
+		}
 		destination := JSONBackupDestinationConf{}
 		destination.OtherAttributes = map[string]string{}
-		for k, v := range a.(map[string]interface{}) {
+		for k, v := range m {
 			switch k {
 			case "id":
-				destination.Id = v.(string)
+				if s, ok := v.(string); ok {
+					destination.Id = s
+				}
 			case "type":
-				destination.Type = v.(string)
+				if s, ok := v.(string); ok {
+					destination.Type = s
+				}
 			case "name":
-				destination.Name = v.(string)
+				if s, ok := v.(string); ok {
+					destination.Name = s
+				}
 			default:
-				switch v.(type) {
+				switch v := v.(type) {
 				case string:
-					destination.OtherAttributes[k] = v.(string)
+					destination.OtherAttributes[k] = v
 				case float64:
-					destination.OtherAttributes[k] = strconv.FormatFloat(v.(float64), 'f', 6, 64)
-					// case int:
-					// 	destination.OtherAttributes[k] = strconv.Itoa(v.(int))
+					destination.OtherAttributes[k] = strconv.FormatFloat(v, 'f', 6, 64)
 				}
 			}
 		}

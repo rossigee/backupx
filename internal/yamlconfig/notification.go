@@ -25,27 +25,41 @@ func (c YAMLBackupNotificationConf) GetOtherAttributes() map[string]string {
 	return c.OtherAttributes
 }
 
-func parseNotifications(j []interface{}) []YAMLBackupNotificationConf {
+func parseNotifications(j []any) []YAMLBackupNotificationConf {
 	notifications := []YAMLBackupNotificationConf{}
 	for _, a := range j {
+		m, ok := a.(map[any]any)
+		if !ok {
+			continue
+		}
 		notification := YAMLBackupNotificationConf{}
 		notification.OtherAttributes = map[string]string{}
-		for k, v := range a.(map[interface{}]interface{}) {
-			switch k.(string) {
+		for k, v := range m {
+			key, ok := k.(string)
+			if !ok {
+				continue
+			}
+			switch key {
 			case "id":
-				notification.Id = v.(string)
+				if s, ok := v.(string); ok {
+					notification.Id = s
+				}
 			case "type":
-				notification.Type = v.(string)
+				if s, ok := v.(string); ok {
+					notification.Type = s
+				}
 			case "name":
-				notification.Name = v.(string)
+				if s, ok := v.(string); ok {
+					notification.Name = s
+				}
 			default:
-				switch v.(type) {
+				switch v := v.(type) {
 				case string:
-					notification.OtherAttributes[k.(string)] = v.(string)
+					notification.OtherAttributes[key] = v
+				case int:
+					notification.OtherAttributes[key] = strconv.Itoa(v)
 				case float64:
-					notification.OtherAttributes[k.(string)] = strconv.FormatFloat(v.(float64), 'f', 6, 64)
-					// case int:
-					// 	notification.OtherAttributes[k] = strconv.Itoa(v.(int))
+					notification.OtherAttributes[key] = strconv.FormatFloat(v, 'f', 6, 64)
 				}
 			}
 		}

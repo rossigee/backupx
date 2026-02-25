@@ -1,8 +1,6 @@
 package yamlconfig
 
-import (
-	"strconv"
-)
+import "strconv"
 
 type YAMLBackupDestinationConf struct {
 	Id              string `yaml:"id"`
@@ -27,27 +25,41 @@ func (c YAMLBackupDestinationConf) GetOtherAttributes() map[string]string {
 	return c.OtherAttributes
 }
 
-func parseDestinations(j []interface{}) []YAMLBackupDestinationConf {
+func parseDestinations(j []any) []YAMLBackupDestinationConf {
 	destinations := []YAMLBackupDestinationConf{}
 	for _, a := range j {
+		m, ok := a.(map[any]any)
+		if !ok {
+			continue
+		}
 		destination := YAMLBackupDestinationConf{}
 		destination.OtherAttributes = map[string]string{}
-		for k, v := range a.(map[interface{}]interface{}) {
-			switch k.(string) {
+		for k, v := range m {
+			key, ok := k.(string)
+			if !ok {
+				continue
+			}
+			switch key {
 			case "id":
-				destination.Id = v.(string)
+				if s, ok := v.(string); ok {
+					destination.Id = s
+				}
 			case "type":
-				destination.Type = v.(string)
+				if s, ok := v.(string); ok {
+					destination.Type = s
+				}
 			case "name":
-				destination.Name = v.(string)
+				if s, ok := v.(string); ok {
+					destination.Name = s
+				}
 			default:
-				switch v.(type) {
+				switch v := v.(type) {
 				case string:
-					destination.OtherAttributes[k.(string)] = v.(string)
+					destination.OtherAttributes[key] = v
+				case int:
+					destination.OtherAttributes[key] = strconv.Itoa(v)
 				case float64:
-					destination.OtherAttributes[k.(string)] = strconv.FormatFloat(v.(float64), 'f', 6, 64)
-					// case int:
-					// 	destination.OtherAttributes[k] = strconv.Itoa(v.(int))
+					destination.OtherAttributes[key] = strconv.FormatFloat(v, 'f', 6, 64)
 				}
 			}
 		}

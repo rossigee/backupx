@@ -1,5 +1,7 @@
 package jsonconfig
 
+import "strconv"
+
 type JSONBackupSourceConf struct {
 	Id              string `json:"id"`
 	Name            string `json:"name"`
@@ -23,21 +25,36 @@ func (c JSONBackupSourceConf) GetOtherAttributes() map[string]string {
 	return c.OtherAttributes
 }
 
-func parseSources(j []interface{}) []JSONBackupSourceConf {
+func parseSources(j []any) []JSONBackupSourceConf {
 	sources := []JSONBackupSourceConf{}
 	for _, a := range j {
+		m, ok := a.(map[string]any)
+		if !ok {
+			continue
+		}
 		source := JSONBackupSourceConf{}
 		source.OtherAttributes = map[string]string{}
-		for k, v := range a.(map[string]interface{}) {
+		for k, v := range m {
 			switch k {
 			case "id":
-				source.Id = v.(string)
+				if s, ok := v.(string); ok {
+					source.Id = s
+				}
 			case "type":
-				source.Type = v.(string)
+				if s, ok := v.(string); ok {
+					source.Type = s
+				}
 			case "name":
-				source.Name = v.(string)
+				if s, ok := v.(string); ok {
+					source.Name = s
+				}
 			default:
-				source.OtherAttributes[k] = v.(string)
+				switch v := v.(type) {
+				case string:
+					source.OtherAttributes[k] = v
+				case float64:
+					source.OtherAttributes[k] = strconv.FormatFloat(v, 'f', 6, 64)
+				}
 			}
 		}
 		sources = append(sources, source)

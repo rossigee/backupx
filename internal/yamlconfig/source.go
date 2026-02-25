@@ -1,5 +1,7 @@
 package yamlconfig
 
+import "strconv"
+
 type YAMLBackupSourceConf struct {
 	Id              string `yaml:"id"`
 	Name            string `yaml:"name"`
@@ -23,21 +25,42 @@ func (c YAMLBackupSourceConf) GetOtherAttributes() map[string]string {
 	return c.OtherAttributes
 }
 
-func parseSources(j []interface{}) []YAMLBackupSourceConf {
+func parseSources(j []any) []YAMLBackupSourceConf {
 	sources := []YAMLBackupSourceConf{}
 	for _, a := range j {
+		m, ok := a.(map[any]any)
+		if !ok {
+			continue
+		}
 		source := YAMLBackupSourceConf{}
 		source.OtherAttributes = map[string]string{}
-		for k, v := range a.(map[interface{}]interface{}) {
-			switch k.(string) {
+		for k, v := range m {
+			key, ok := k.(string)
+			if !ok {
+				continue
+			}
+			switch key {
 			case "id":
-				source.Id = v.(string)
+				if s, ok := v.(string); ok {
+					source.Id = s
+				}
 			case "type":
-				source.Type = v.(string)
+				if s, ok := v.(string); ok {
+					source.Type = s
+				}
 			case "name":
-				source.Name = v.(string)
+				if s, ok := v.(string); ok {
+					source.Name = s
+				}
 			default:
-				source.OtherAttributes[k.(string)] = v.(string)
+				switch v := v.(type) {
+				case string:
+					source.OtherAttributes[key] = v
+				case int:
+					source.OtherAttributes[key] = strconv.Itoa(v)
+				case float64:
+					source.OtherAttributes[key] = strconv.FormatFloat(v, 'f', 6, 64)
+				}
 			}
 		}
 		sources = append(sources, source)

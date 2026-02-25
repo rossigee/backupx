@@ -25,27 +25,35 @@ func (c JSONBackupNotificationConf) GetOtherAttributes() map[string]string {
 	return c.OtherAttributes
 }
 
-func parseNotifications(j []interface{}) []JSONBackupNotificationConf {
+func parseNotifications(j []any) []JSONBackupNotificationConf {
 	notifications := []JSONBackupNotificationConf{}
 	for _, a := range j {
+		m, ok := a.(map[string]any)
+		if !ok {
+			continue
+		}
 		notification := JSONBackupNotificationConf{}
 		notification.OtherAttributes = map[string]string{}
-		for k, v := range a.(map[string]interface{}) {
+		for k, v := range m {
 			switch k {
 			case "id":
-				notification.Id = v.(string)
+				if s, ok := v.(string); ok {
+					notification.Id = s
+				}
 			case "type":
-				notification.Type = v.(string)
+				if s, ok := v.(string); ok {
+					notification.Type = s
+				}
 			case "name":
-				notification.Name = v.(string)
+				if s, ok := v.(string); ok {
+					notification.Name = s
+				}
 			default:
-				switch v.(type) {
+				switch v := v.(type) {
 				case string:
-					notification.OtherAttributes[k] = v.(string)
+					notification.OtherAttributes[k] = v
 				case float64:
-					notification.OtherAttributes[k] = strconv.FormatFloat(v.(float64), 'f', 6, 64)
-					// case int:
-					// 	notification.OtherAttributes[k] = strconv.Itoa(v.(int))
+					notification.OtherAttributes[k] = strconv.FormatFloat(v, 'f', 6, 64)
 				}
 			}
 		}

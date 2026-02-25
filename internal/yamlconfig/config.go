@@ -7,9 +7,9 @@ import (
 )
 
 type YAMLBackupConf struct {
-	Id            string                       `json:"id"`
-	Name          string                       `json:"name"`
-	Sources       []YAMLBackupSourceConf       `yaml:"source"`
+	Id            string                       `yaml:"id"`
+	Name          string                       `yaml:"name"`
+	Sources       []YAMLBackupSourceConf       `yaml:"sources"`
 	Destinations  []YAMLBackupDestinationConf  `yaml:"destinations"`
 	Notifications []YAMLBackupNotificationConf `yaml:"notifications"`
 }
