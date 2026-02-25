@@ -13,13 +13,13 @@ func ParseYAMLConfigFile(filename string) (config.IBackupConfig, error) {
 
 	rawYAML, err := os.ReadFile(filename)
 	if err != nil {
-		return nil, fmt.Errorf("Error reading YAML file: %v", err)
+		return nil, fmt.Errorf("error reading YAML file: %v", err)
 	}
 
 	var configMap map[string]any
 	err = yaml.Unmarshal(rawYAML, &configMap)
 	if err != nil {
-		return nil, fmt.Errorf("Error parsing YAML file: %v", err)
+		return nil, fmt.Errorf("error parsing YAML file: %v", err)
 	}
 
 	for k, v := range configMap {

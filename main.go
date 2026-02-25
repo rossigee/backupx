@@ -15,8 +15,6 @@ import (
 
 var (
 	conf    config.IBackupConfig
-	verbose bool
-	debug   bool
 	timings Timings
 )
 
@@ -33,11 +31,9 @@ func usage() {
 
 func parseArgs() (string, bool) {
 	flag.Usage = usage
-	verbose_opt := flag.Bool("v", false, "Verbose output")
-	debug_opt := flag.Bool("d", false, "Debug output")
+	flag.Bool("v", false, "Verbose output")
+	flag.Bool("d", false, "Debug output")
 	flag.Parse()
-	verbose = *verbose_opt
-	debug = *debug_opt
 
 	args := flag.Args()
 	if len(args) != 1 {

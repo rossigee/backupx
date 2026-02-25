@@ -13,13 +13,13 @@ func ParseJSONConfigFile(filename string) (config.IBackupConfig, error) {
 
 	rawJSON, err := os.ReadFile(filename)
 	if err != nil {
-		return nil, fmt.Errorf("Error reading JSON file: %v", err)
+		return nil, fmt.Errorf("error reading JSON file: %v", err)
 	}
 
 	var configMap map[string]any
 	err = json.Unmarshal(rawJSON, &configMap)
 	if err != nil {
-		return nil, fmt.Errorf("Error parsing JSON file: %v", err)
+		return nil, fmt.Errorf("error parsing JSON file: %v", err)
 	}
 
 	for k, v := range configMap {
