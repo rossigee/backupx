@@ -42,14 +42,26 @@ jobs:
       - name: Run integration tests with docker compose
         run: |
           docker compose -f docker-compose.test.yml up -d
-          # Wait for MinIO to be ready
+          # Wait for all services to be ready
           for i in {1..30}; do
-            docker compose -f docker-compose.test.yml exec -T minio curl -s http://localhost:9000/minio/health/live && break
+            docker compose -f docker-compose.test.yml exec -T minio curl -s http://localhost:9000/minio/health/live && \
+            docker compose -f docker-compose.test.yml exec -T postgresql pg_isready -U testuser -d testdb && \
+            docker compose -f docker-compose.test.yml exec -T mysql mysqladmin ping -h localhost -u testuser -ptestpass && break
             sleep 2
           done
           MINIO_ENDPOINT=http://localhost:9000 \
           MINIO_USER=minioadmin \
           MINIO_PASS=minioadmin \
+          POSTGRES_HOST=localhost \
+          POSTGRES_PORT=5432 \
+          POSTGRES_USER=testuser \
+          POSTGRES_PASSWORD=testpass \
+          POSTGRES_DB=testdb \
+          MYSQL_HOST=localhost \
+          MYSQL_PORT=3306 \
+          MYSQL_USER=testuser \
+          MYSQL_PASSWORD=testpass \
+          MYSQL_DB=testdb \
           make test
           docker compose -f docker-compose.test.yml down
 
