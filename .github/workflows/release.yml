@@ -36,7 +36,9 @@ jobs:
       - name: Generate release notes
         id: release-notes
         run: |
-          cat > /tmp/release-notes.md <<'EOFNOTES'
+          EOF_NOTES="release-notes-$(date +%s)"
+          echo "notes<<$EOF_NOTES" >> $GITHUB_OUTPUT
+          cat >> $GITHUB_OUTPUT <<'EOFNOTES'
           # backupx v0.1.0 - Initial Release
 
           High-performance streaming backup tool for databases and files.
@@ -88,7 +90,7 @@ jobs:
           - Debian package support
           - Pre-commit quality gates
           EOFNOTES
-          echo "notes=$(cat /tmp/release-notes.md)" >> $GITHUB_OUTPUT
+          echo "$EOF_NOTES" >> $GITHUB_OUTPUT
 
       - name: Set up Go
         uses: actions/setup-go@v4
