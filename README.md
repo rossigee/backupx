@@ -115,10 +115,39 @@ git push origin v1.0.0
 
 ## Security
 
-- **Encryption**: AES256 via GPG
-- **No Temp Files**: Direct stream source → encrypt → upload
-- **Token Auth**: Bearer tokens for APIs
-- **No Secret Logging**: Credentials not logged
+### Encryption & Data Protection
+- **Encryption**: AES256 symmetric via GPG
+- **Streaming**: Data flows directly source → encrypt → upload (no plaintext on disk)
+- **No Temporary Files**: Encryption happens in-memory, not on filesystem
+
+### Configuration Security
+- **⚠️ Important**: Config files contain credentials (passwords, API tokens)
+- **Protect Config**: `chmod 600 backup.yaml` (read/write for owner only)
+- **Environment Variables**: Use for sensitive values
+  ```yaml
+  password: ${DB_PASSWORD}  # Reads from environment
+  token: ${API_TOKEN}
+  ```
+
+### Network & Authentication
+- **HTTPS/TLS**: All external API calls use secure connections
+- **Bearer Tokens**: Supported for BackupRegistry API
+- **Timeouts**: 10-second HTTP timeout on all requests
+- **No Secret Logging**: Credentials never appear in logs
+
+### Prerequisites
+- **GPG Required**: Install for AES256 encryption
+  ```bash
+  gpg --version  # Verify installation
+  ```
+
+### Best Practices
+1. Protect config file: `chmod 600 backup.yaml`
+2. Use environment variables for sensitive values
+3. Keep GPG and dependencies updated
+4. Monitor backup logs for errors or security issues
+5. Test restore process regularly
+6. Use dedicated IAM users for AWS access
 
 If encryption is not needed or desired, you may specify that only compression is used. Note that this will not safeguard the contents of the file should someone gain access to it. Compression is performed using gzip --fast and can be specfied in the source configuration using...
 
