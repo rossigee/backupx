@@ -33,6 +33,63 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Generate release notes
+        id: release-notes
+        run: |
+          cat > /tmp/release-notes.md <<'EOFNOTES'
+          # backupx v0.1.0 - Initial Release
+
+          High-performance streaming backup tool for databases and files.
+
+          ## Features
+          - **PostgreSQL & MySQL**: Full database backups with compression
+          - **Folder Backups**: tar-based with exclude patterns
+          - **S3 Compatible**: AWS S3, MinIO, Wasabi, DigitalOcean Spaces
+          - **AES256 Encryption**: Streaming GPG encryption (no temp files)
+          - **Multiple Notifications**: Slack, HTTP API, logging, file markers
+          - **Zero-Buffering**: Constant memory usage regardless of backup size
+
+          ## Installation
+
+          ### Binary
+          Download the appropriate binary for your platform and make it executable:
+          ```bash
+          chmod +x backupx-linux-amd64
+          ./backupx-linux-amd64 backup.yaml
+          ```
+
+          ### Debian/Ubuntu
+          ```bash
+          sudo dpkg -i backupx-0.1.0-amd64.deb
+          backupx /etc/backupx/backup.yaml
+          ```
+
+          ## Quick Start
+          1. Create `backup.yaml` configuration file
+          2. Run: `./backupx backup.yaml`
+          3. (Optional) Set up cron job for scheduled backups
+
+          ## Documentation
+          - [Configuration Guide](https://github.com/rossigee/backupx/blob/master/docs/configuration.md)
+          - [Architecture](https://github.com/rossigee/backupx/blob/master/docs/architecture.md)
+          - [Testing Guide](https://github.com/rossigee/backupx/blob/master/docs/testing.md)
+
+          ## Verification
+          All artifacts include SHA256 checksums. Verify before installation:
+          ```bash
+          sha256sum -c backupx-linux-amd64.sha256
+          ```
+
+          ## Changes Since Announcement
+          - Streaming pipeline with O(1) memory usage
+          - 80+ tests with 73% coverage
+          - Complete documentation
+          - Multi-platform binary builds
+          - Debian package support
+          - Pre-commit quality gates
+          EOFNOTES
+          echo "notes=$(cat /tmp/release-notes.md)" >> $GITHUB_OUTPUT
+
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
@@ -56,6 +113,7 @@ jobs:
       - name: Upload to release
         uses: softprops/action-gh-release@v1
         with:
+          body: ${{ steps.release-notes.outputs.notes }}
           files: |
             backupx-${{ matrix.os }}-${{ matrix.arch }}${{ matrix.os == 'windows' && '.exe' || '' }}
             backupx-${{ matrix.os }}-${{ matrix.arch }}.sha256
@@ -96,6 +154,8 @@ jobs:
             -o backupx
 
       - name: Create Debian package
+        env:
+          VERSION: ${{ github.ref_name }}
         run: |
           mkdir -p debian/usr/local/bin
           mkdir -p debian/etc/backupx
@@ -105,13 +165,16 @@ jobs:
 
           cp docs/configuration.md debian/etc/backupx/example-config.md
 
+          # Strip 'v' prefix from version for Debian (v0.1.0 -> 0.1.0)
+          DEB_VERSION=${VERSION#v}
+
           fpm -s dir \
             -t deb \
             -n backupx \
-            -v ${{ github.ref_name }} \
+            -v $DEB_VERSION \
             -a ${{ matrix.arch }} \
             -C debian \
-            -p backupx-${{ github.ref_name }}-${{ matrix.arch }}.deb \
+            -p backupx-${DEB_VERSION}-${{ matrix.arch }}.deb \
             --description "High-performance streaming backup tool for databases and files" \
             --url "https://github.com/rossigee/backupx" \
             --license "MIT" \
@@ -120,15 +183,20 @@ jobs:
             --deb-field "Homepage: https://github.com/rossigee/backupx"
 
       - name: Create checksum
+        env:
+          VERSION: ${{ github.ref_name }}
         run: |
-          sha256sum backupx-${{ github.ref_name }}-${{ matrix.arch }}.deb > \
-            backupx-${{ github.ref_name }}-${{ matrix.arch }}.deb.sha256
+          DEB_VERSION=${VERSION#v}
+          sha256sum backupx-${DEB_VERSION}-${{ matrix.arch }}.deb > \
+            backupx-${DEB_VERSION}-${{ matrix.arch }}.deb.sha256
 
       - name: Upload to release
+        env:
+          VERSION: ${{ github.ref_name }}
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            backupx-${{ github.ref_name }}-${{ matrix.arch }}.deb
-            backupx-${{ github.ref_name }}-${{ matrix.arch }}.deb.sha256
+            backupx-${{ env.VERSION }}-${{ matrix.arch }}.deb
+            backupx-${{ env.VERSION }}-${{ matrix.arch }}.deb.sha256
           draft: false
           prerelease: false
