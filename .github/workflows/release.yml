@@ -103,7 +103,7 @@ jobs:
           cp backupx debian/usr/local/bin/
           chmod +x debian/usr/local/bin/backupx
 
-          cp docs/CONFIGURATION.md debian/etc/backupx/example-config.md
+          cp docs/configuration.md debian/etc/backupx/example-config.md
 
           fpm -s dir \
             -t deb \
