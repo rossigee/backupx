@@ -1,0 +1,134 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    strategy:
+      matrix:
+        include:
+          - os: linux
+            arch: amd64
+            binary_name: backupx
+          - os: linux
+            arch: arm64
+            binary_name: backupx
+          - os: darwin
+            arch: amd64
+            binary_name: backupx
+          - os: darwin
+            arch: arm64
+            binary_name: backupx
+          - os: windows
+            arch: amd64
+            binary_name: backupx.exe
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.27.1'
+
+      - name: Build ${{ matrix.os }}-${{ matrix.arch }}
+        env:
+          GOOS: ${{ matrix.os }}
+          GOARCH: ${{ matrix.arch }}
+          CGO_ENABLED: 0
+        run: |
+          go build -v \
+            -ldflags="-X main.version=${{ github.ref_name }}" \
+            -o backupx-${{ matrix.os }}-${{ matrix.arch }}${{ matrix.os == 'windows' && '.exe' || '' }}
+
+      - name: Create checksum
+        run: |
+          sha256sum backupx-${{ matrix.os }}-${{ matrix.arch }}${{ matrix.os == 'windows' && '.exe' || '' }} > \
+            backupx-${{ matrix.os }}-${{ matrix.arch }}.sha256
+
+      - name: Upload to release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            backupx-${{ matrix.os }}-${{ matrix.arch }}${{ matrix.os == 'windows' && '.exe' || '' }}
+            backupx-${{ matrix.os }}-${{ matrix.arch }}.sha256
+          draft: false
+          prerelease: false
+
+  debian:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    strategy:
+      matrix:
+        arch: [amd64, arm64]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.27.1'
+
+      - name: Install fpm
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ruby ruby-dev rubygems build-essential
+          sudo gem install --no-document fpm
+
+      - name: Build binary
+        env:
+          GOOS: linux
+          GOARCH: ${{ matrix.arch }}
+          CGO_ENABLED: 0
+        run: |
+          go build -v \
+            -ldflags="-X main.version=${{ github.ref_name }}" \
+            -o backupx
+
+      - name: Create Debian package
+        run: |
+          mkdir -p debian/usr/local/bin
+          mkdir -p debian/etc/backupx
+
+          cp backupx debian/usr/local/bin/
+          chmod +x debian/usr/local/bin/backupx
+
+          cp docs/CONFIGURATION.md debian/etc/backupx/example-config.md
+
+          fpm -s dir \
+            -t deb \
+            -n backupx \
+            -v ${{ github.ref_name }} \
+            -a ${{ matrix.arch }} \
+            -C debian \
+            -p backupx-${{ github.ref_name }}-${{ matrix.arch }}.deb \
+            --description "High-performance streaming backup tool for databases and files" \
+            --url "https://github.com/rossigee/backupx" \
+            --license "MIT" \
+            --maintainer "Ross Golder <ross@golder.org>" \
+            --deb-priority optional \
+            --deb-field "Homepage: https://github.com/rossigee/backupx"
+
+      - name: Create checksum
+        run: |
+          sha256sum backupx-${{ github.ref_name }}-${{ matrix.arch }}.deb > \
+            backupx-${{ github.ref_name }}-${{ matrix.arch }}.deb.sha256
+
+      - name: Upload to release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            backupx-${{ github.ref_name }}-${{ matrix.arch }}.deb
+            backupx-${{ github.ref_name }}-${{ matrix.arch }}.deb.sha256
+          draft: false
+          prerelease: false
