@@ -33,7 +33,7 @@ jobs:
     runs-on: ubuntu-26.04
     services:
       minio:
-        image: minio/minio:latest
+        image: pgsty/minio
         env:
           MINIO_ROOT_USER: minioadmin
           MINIO_ROOT_PASSWORD: minioadmin
