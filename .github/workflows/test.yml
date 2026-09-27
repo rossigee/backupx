@@ -10,10 +10,10 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4.1.1
 
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version: '1.27.1'
 
@@ -24,7 +24,7 @@ jobs:
         run: make test-unit
 
       - name: Upload coverage
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           files: ./coverage.out
           fail_ci_if_error: false
@@ -46,10 +46,10 @@ jobs:
           - 9000:9000
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4.1.1
 
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version: '1.27.1'
 
@@ -78,10 +78,10 @@ jobs:
             arch: arm64
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4.1.1
 
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version: '1.27.1'
 
@@ -92,7 +92,7 @@ jobs:
         run: go build -o backupx-${{ matrix.os }}-${{ matrix.arch }}
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: backupx-${{ matrix.os }}-${{ matrix.arch }}
           path: backupx-${{ matrix.os }}-${{ matrix.arch }}
