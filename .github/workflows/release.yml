@@ -124,13 +124,18 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-
     strategy:
       matrix:
         arch: [amd64, arm64]
-
     steps:
       - uses: actions/checkout@v4
+
+      - name: Compute version
+        id: version
+        run: |
+          VERSION="${{ github.ref_name }}"
+          DEB_VERSION="${VERSION#v}"
+          echo "version=$DEB_VERSION" >> $GITHUB_OUTPUT
 
       - name: Set up Go
         uses: actions/setup-go@v4
@@ -154,27 +159,20 @@ jobs:
             -o backupx
 
       - name: Create Debian package
-        env:
-          VERSION: ${{ github.ref_name }}
         run: |
           mkdir -p debian/usr/local/bin
           mkdir -p debian/etc/backupx
-
           cp backupx debian/usr/local/bin/
           chmod +x debian/usr/local/bin/backupx
-
           cp docs/configuration.md debian/etc/backupx/example-config.md
-
-          # Strip 'v' prefix from version for Debian (v0.1.0 -> 0.1.0)
-          DEB_VERSION=${VERSION#v}
 
           fpm -s dir \
             -t deb \
             -n backupx \
-            -v $DEB_VERSION \
+            -v "${{ steps.version.outputs.version }}" \
             -a ${{ matrix.arch }} \
             -C debian \
-            -p backupx-${DEB_VERSION}-${{ matrix.arch }}.deb \
+            -p "backupx-${{ steps.version.outputs.version }}-${{ matrix.arch }}.deb" \
             --description "High-performance streaming backup tool for databases and files" \
             --url "https://github.com/rossigee/backupx" \
             --license "MIT" \
@@ -183,20 +181,25 @@ jobs:
             --deb-field "Homepage: https://github.com/rossigee/backupx"
 
       - name: Create checksum
-        env:
-          VERSION: ${{ github.ref_name }}
         run: |
-          DEB_VERSION=${VERSION#v}
-          sha256sum backupx-${DEB_VERSION}-${{ matrix.arch }}.deb > \
-            backupx-${DEB_VERSION}-${{ matrix.arch }}.deb.sha256
+          sha256sum "backupx-${{ steps.version.outputs.version }}-${{ matrix.arch }}.deb" > \
+            "backupx-${{ steps.version.outputs.version }}-${{ matrix.arch }}.deb.sha256"
 
-      - name: Upload to release
-        env:
-          VERSION: ${{ github.ref_name }}
+      - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            backupx-${{ env.VERSION }}-${{ matrix.arch }}.deb
-            backupx-${{ env.VERSION }}-${{ matrix.arch }}.deb.sha256
+            backupx-${{ steps.version.outputs.version }}-${{ matrix.arch }}.deb
+            backupx-${{ steps.version.outputs.version }}-${{ matrix.arch }}.deb.sha256
           draft: false
           prerelease: false
+
+      - name: Upload to debs.golder.tech
+        continue-on-error: true
+        uses: rossigee/debian-repo-upload-action@master
+        with:
+          file: backupx-${{ steps.version.outputs.version }}-${{ matrix.arch }}.deb
+          base-url: https://debs.golder.tech
+          token: ${{ secrets.DEBIAN_REPO_CI_TOKEN }}
+          suite: stable
+          component: main
