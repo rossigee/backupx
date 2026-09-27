@@ -179,8 +179,7 @@ jobs:
             --url "https://github.com/rossigee/backupx" \
             --license "MIT" \
             --maintainer "Ross Golder <ross@golder.org>" \
-            --deb-priority optional \
-            --deb-field "Homepage: https://github.com/rossigee/backupx"
+            --deb-priority optional
 
       - name: Create checksum
         run: |
