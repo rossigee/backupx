@@ -195,7 +195,6 @@ jobs:
           prerelease: false
 
       - name: Upload to debs.golder.tech
-        continue-on-error: true
         uses: rossigee/debian-repo-upload-action@master
         with:
           file: backupx-${{ steps.version.outputs.version }}-${{ matrix.arch }}.deb
