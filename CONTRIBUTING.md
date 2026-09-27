@@ -162,6 +162,32 @@ git commit -m "Add my feature"
 git push origin feature/my-feature
 ```
 
+## Release Process
+
+### Prerequisites
+The repository requires a GitHub secret for automated Debian package uploads:
+
+1. **`DEBIAN_REPO_CI_TOKEN`**: API token for debs.golder.tech
+   - Obtain from vault at `/home/rossg/infrastructure/platform-config/docker-stacks/vault.golder.lan/debian-repo/.env` (key: `CI_UPLOAD_TOKEN`)
+   - Set in GitHub: **Settings → Secrets and variables → Actions** → **New repository secret**
+
+### Creating a Release
+```bash
+# Ensure all tests pass
+make test
+
+# Create and push version tag
+git tag v0.2.0
+git push origin v0.2.0
+```
+
+This triggers the Release workflow which:
+- Builds 5 platform binaries (linux/darwin/windows × amd64/arm64)
+- Creates Debian packages for amd64 + arm64
+- Generates SHA256 checksums
+- Uploads to GitHub Release
+- Uploads .deb packages to debs.golder.tech
+
 ## Reporting Bugs
 
 Include:
