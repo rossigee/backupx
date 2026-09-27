@@ -31,20 +31,6 @@ jobs:
 
   integration:
     runs-on: ubuntu-26.04
-    services:
-      minio:
-        image: pgsty/minio
-        env:
-          MINIO_ROOT_USER: minioadmin
-          MINIO_ROOT_PASSWORD: minioadmin
-        options: >-
-          --health-cmd "nc -zv localhost 9000 || exit 1"
-          --health-interval 5s
-          --health-timeout 3s
-          --health-retries 10
-        ports:
-          - 9000:9000
-
     steps:
       - uses: actions/checkout@v7
 
@@ -53,19 +39,19 @@ jobs:
         with:
           go-version: '1.27.1'
 
-      - name: Wait for MinIO
+      - name: Run integration tests with docker-compose
         run: |
+          docker-compose -f docker-compose.test.yml up -d
+          # Wait for MinIO to be ready
           for i in {1..30}; do
-            curl -f http://localhost:9000/minio/health/live && break
-            sleep 1
+            docker-compose -f docker-compose.test.yml exec -T minio curl -s http://localhost:9000/minio/health/live && break
+            sleep 2
           done
-
-      - name: Run integration tests
-        run: |
           MINIO_ENDPOINT=http://localhost:9000 \
           MINIO_USER=minioadmin \
           MINIO_PASS=minioadmin \
           make test
+          docker-compose -f docker-compose.test.yml down
 
   build:
     runs-on: ubuntu-26.04
