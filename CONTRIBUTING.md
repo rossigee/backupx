@@ -1,0 +1,171 @@
+# Contributing to backupx
+
+## Development Setup
+
+### Prerequisites
+- Go 1.27.1
+- git
+- Docker (for E2E testing with MinIO)
+- Python 3 (for pre-commit hooks)
+
+### Install Development Tools
+
+```bash
+# Install pre-commit
+pip install pre-commit
+
+# Install pre-commit hooks
+pre-commit install
+
+# Verify installation
+pre-commit run --all-files
+```
+
+## Before Committing
+
+All commits automatically run:
+
+### 1. **golangci-lint** (linting)
+```bash
+make lint
+```
+
+### 2. **gofmt** (formatting)
+```bash
+gofmt -w .
+```
+
+### 3. **go vet** (static analysis)
+```bash
+go vet ./...
+```
+
+### 4. **Tests** (manually before commit)
+```bash
+make test          # All tests
+make test-unit     # Fast unit tests
+```
+
+### 5. **Secrets Detection**
+- Detects AWS keys, tokens, private keys
+- Baseline: `.secrets.baseline`
+
+### 6. **File Checks**
+- Trailing whitespace removal
+- End-of-file fixes
+- YAML validation
+- Merge conflict detection
+- Large file prevention (>1MB)
+
+## Code Standards
+
+### Go
+- Follow `go fmt` formatting (enforced by pre-commit)
+- Pass `golangci-lint` checks (enforced by pre-commit)
+- Run `go vet` (enforced by pre-commit)
+- 100% test coverage for new code
+
+### Testing
+Every change must include:
+- Unit tests (same package)
+- Table-driven tests for multiple scenarios
+- Error cases tested
+
+### Documentation
+- Update `docs/configuration.md` if adding config options
+- Update `docs/architecture.md` if changing design
+- Update README.md for user-facing features
+- Add comments for non-obvious logic
+
+## Commit Message Format
+
+```
+Short title (under 70 characters)
+
+Detailed explanation:
+- What changed
+- Why it changed
+- How to verify
+
+Closes #123 (if applicable)
+```
+
+## Pull Request Process
+
+1. **Before pushing**:
+   ```bash
+   git add .
+   pre-commit run --all-files  # Run all checks
+   make test                   # Run all tests
+   ```
+
+2. **Create PR** with:
+   - Clear title describing change
+   - Link to related issue
+   - Summary of changes
+   - Test evidence
+
+3. **Await CI** (GitHub Actions):
+   - test.yml runs linting, unit tests, integration tests
+   - All must pass before merge
+
+## Testing Guidelines
+
+### Unit Tests
+```bash
+go test ./... -v -run TestName
+```
+
+### Integration Tests (with MinIO)
+```bash
+docker-compose -f docker-compose.test.yml up -d
+go test ./destinations/s3 -v
+docker-compose -f docker-compose.test.yml down
+```
+
+### E2E Tests
+```bash
+make test-e2e
+```
+
+## Adding New Features
+
+### 1. Create feature branch
+```bash
+git checkout -b feature/my-feature
+```
+
+### 2. Make changes with tests
+```bash
+# Create files, update tests
+make test      # Verify all pass
+make lint      # Fix linting
+```
+
+### 3. Document changes
+```bash
+# Update relevant docs
+vim docs/configuration.md   # If config changed
+vim README.md              # If user-facing
+```
+
+### 4. Commit and push
+```bash
+git add .
+pre-commit run --all-files  # Auto-fix issues
+git commit -m "Add my feature"
+git push origin feature/my-feature
+```
+
+## Reporting Bugs
+
+Include:
+- Go version (`go version`)
+- OS and architecture
+- Minimal reproduction case
+- Expected vs actual behavior
+- Relevant logs (redacted of secrets)
+
+## License
+
+By contributing, you agree that your contributions will be licensed under the same license as the project.

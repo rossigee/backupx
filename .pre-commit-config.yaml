@@ -1,0 +1,80 @@
+repos:
+  # Go linting
+  - repo: local
+    hooks:
+      - id: golangci-lint
+        name: golangci-lint
+        entry: bash -c 'make lint'
+        language: system
+        types: [go]
+        pass_filenames: false
+        always_run: true
+
+  # Go formatting
+  - repo: local
+    hooks:
+      - id: gofmt
+        name: gofmt
+        entry: bash -c 'gofmt -w .'
+        language: system
+        types: [go]
+        pass_filenames: false
+
+  # Go vet
+  - repo: local
+    hooks:
+      - id: govet
+        name: go vet
+        entry: bash -c 'go vet ./...'
+        language: system
+        types: [go]
+        pass_filenames: false
+        always_run: true
+
+  # Trailing whitespace
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+        name: trim trailing whitespace
+      - id: end-of-file-fixer
+        name: fix end of file
+      - id: check-yaml
+        name: check YAML
+        args: ['--unsafe']
+      - id: check-added-large-files
+        name: check for large files
+        args: ['--maxkb=1000']
+      - id: check-merge-conflict
+        name: check for merge conflicts
+      - id: mixed-line-ending
+        name: fix mixed line endings
+
+  # Secrets detection
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.4.0
+    hooks:
+      - id: detect-secrets
+        name: detect secrets
+        args: ['--baseline', '.secrets.baseline']
+        exclude: go.sum
+
+  # YAML formatting
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v3.1.0
+    hooks:
+      - id: prettier
+        name: prettier (YAML/JSON)
+        types: [yaml, json]
+        exclude: go.mod|go.sum
+        args: ['--prose-wrap=always']
+
+  # Markdown
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.37.0
+    hooks:
+      - id: markdownlint
+        name: markdownlint
+        types: [markdown]
+        exclude: vendor/
+        args: ['--fix']
