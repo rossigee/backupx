@@ -31,7 +31,7 @@ jobs:
             binary_name: backupx.exe
 
     steps:
-      - uses: actions/checkout@v4.1.1
+      - uses: actions/checkout@v4.2.0
 
       - name: Generate release notes
         id: release-notes
@@ -93,7 +93,7 @@ jobs:
           echo "$EOF_NOTES" >> $GITHUB_OUTPUT
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v5.1.0
         with:
           go-version: '1.27.1'
 
@@ -113,7 +113,7 @@ jobs:
             backupx-${{ matrix.os }}-${{ matrix.arch }}.sha256
 
       - name: Upload to release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v2.1.0
         with:
           body: ${{ steps.release-notes.outputs.notes }}
           files: |
@@ -130,7 +130,7 @@ jobs:
       matrix:
         arch: [amd64, arm64]
     steps:
-      - uses: actions/checkout@v4.1.1
+      - uses: actions/checkout@v4.2.0
 
       - name: Compute version
         id: version
@@ -140,7 +140,7 @@ jobs:
           echo "version=$DEB_VERSION" >> $GITHUB_OUTPUT
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v5.1.0
         with:
           go-version: '1.27.1'
 
@@ -187,7 +187,7 @@ jobs:
             "backupx-${{ steps.version.outputs.version }}-${{ matrix.arch }}.deb.sha256"
 
       - name: Upload to GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v2.1.0
         with:
           files: |
             backupx-${{ steps.version.outputs.version }}-${{ matrix.arch }}.deb
