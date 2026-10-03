@@ -196,7 +196,7 @@ jobs:
           prerelease: false
 
       - name: Upload to debs.golder.tech
-        uses: rossigee/debian-repo-upload-action@master
+        uses: rossigee/debian-repo-upload-action@v1
         with:
           file: backupx-${{ steps.version.outputs.version }}-${{ matrix.arch }}.deb
           base-url: https://debs.golder.tech
